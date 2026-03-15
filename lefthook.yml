@@ -1,0 +1,27 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  jobs:
+    - name: beads pre-commit
+      run: bd hooks run pre-commit
+
+post-merge:
+  jobs:
+    - name: beads post-merge
+      run: bd hooks run post-merge
+
+pre-push:
+  jobs:
+    - name: beads pre-push
+      run: bd hooks run pre-push
+
+post-checkout:
+  jobs:
+    - name: beads post-checkout
+      run: bd hooks run post-checkout {0} {1} {2}
+
+prepare-commit-msg:
+  jobs:
+    - name: beads prepare-commit-msg
+      run: bd hooks run prepare-commit-msg {1} {2} {3}
