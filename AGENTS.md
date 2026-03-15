@@ -1,5 +1,9 @@
 # Agent Instructions
 
+- Use Conventional commits.
+- Do red/green TDD for code. One test than one implementation at a time
+- We use Beads, `bd`, for issues -- not GitHub Issues
+
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Quick Reference
@@ -33,8 +37,6 @@ cp -rf source dest          # NOT: cp -r source dest
 **Other commands that may prompt:**
 - `scp` - use `-o BatchMode=yes` for non-interactive
 - `ssh` - use `-o BatchMode=yes` to fail instead of prompting
-- `apt-get` - use `-y` flag
-- `brew` - use `HOMEBREW_NO_AUTO_UPDATE=1` env var
 
 <!-- BEGIN BEADS INTEGRATION -->
 ## Issue Tracking with bd (beads)
