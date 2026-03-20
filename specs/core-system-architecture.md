@@ -441,6 +441,137 @@ primitives with Monarch-specific configuration.
 
 ---
 
+## Storage Abstraction
+
+Each core store (Record Store, Agent Store) separates business logic from
+persistence through a repository interface.
+
+### Pattern
+
+```go
+// Each store defines its own repository interface tailored to its needs.
+// The record store needs graph queries (relationships), the agent store doesn't.
+
+// package recordstore
+type Repository interface {
+    Get(ctx context.Context, id string) (*Record, error)
+    Put(ctx context.Context, record *Record) error
+    Delete(ctx context.Context, id string) error
+    Query(ctx context.Context, filter Filter) ([]*Record, error)
+}
+
+type Store struct {
+    repo Repository
+}
+```
+
+**Key decisions:**
+- **Per-store interfaces** — each store defines its own repository contract.
+  Forcing both through a generic engine either over-abstracts or under-serves
+  one of them.
+- **In-memory implementations** ship alongside each core package for testing
+  and for consumers who don't need durability.
+- **Dolt implementations** live in `internal/dolt/` — not importable by external
+  consumers, isolated behind the core interfaces.
+- **Blast radius** — changing persistence for one store doesn't touch the other.
+  Swapping Dolt for something else means rewriting one wrapper, not the store
+  logic.
+
+This follows the dependency management principle: external dependencies enter
+through wrappers. Domain code never imports Dolt directly.
+
+---
+
+## Observability
+
+Operational observability is separate from the domain event system. Domain events
+(`record.created`, `record.state.changed`) drive application behavior.
+Observability lets humans and agents verify the system is behaving correctly at
+runtime.
+
+### Structured Logging
+
+All logging uses Go's `log/slog` (stdlib). Structured events with typed fields,
+not ad-hoc strings.
+
+Core packages accept a `*slog.Logger` via their constructor. The consumer
+configures output format and destination. Tests pass a no-op logger.
+
+```go
+store := recordstore.New(repo, recordstore.WithLogger(logger))
+```
+
+### Correlation
+
+A correlation ID threads through operations via `context.Context`. All core
+package methods accept `context.Context` as their first parameter. The
+orchestrator or CLI sets the correlation ID at the entry point. Logged on every
+observation.
+
+### Observation Points
+
+Observe at edges — where inputs arrive, external systems are called, state
+changes, and errors are handled.
+
+| Observation point | What to log |
+|---|---|
+| Record store mutations | Record ID, type, operation, actor, correlation ID |
+| State transitions | Record ID, from, to, actor, guard results, correlation ID |
+| Event emission | Event type, record ID, subscriber count, correlation ID |
+| Event handler execution | Handler name, event type, duration, success/failure |
+| Orchestrator decisions | What was scheduled, why, which agent |
+| Dolt operations | Query, duration, rows affected |
+
+Pure functions are silent — they are deterministic from their inputs and need no
+observation.
+
+---
+
+## Contract Evolution
+
+The system will evolve rapidly. The approach to change is: make additive changes
+free, defer migration machinery until pain appears.
+
+### Design for Additive Change
+
+- **Open enums** (already a design principle) — new record types, states,
+  relationship kinds, and metadata fields are additive and non-breaking.
+- **Functional options** on constructors — APIs grow without breaking existing
+  callers.
+- **Zero-value safe** — new fields on structs default to their zero value.
+  Existing records gain new fields with zero values, no migration needed.
+
+### Core Package APIs Are Contracts
+
+Don't break them without a reason. Follow Go conventions:
+- Additive changes (new functions, new option fields) are non-breaking
+- Deprecate before removing (`// Deprecated:` comments, flagged by staticcheck)
+- Breaking changes require a new major version (`/v2` import paths)
+
+### When Breaking Changes Happen
+
+Handle them when they arrive, not before:
+- **Record schema changes** — when the first breaking schema change occurs,
+  add type versioning and migration functions then.
+- **State machine changes** — when a live state machine needs modification,
+  add state machine versioning then.
+- **Migration infrastructure** — build it the first time data needs transforming,
+  not preemptively.
+
+The test suite is the safety net. Clean interfaces, good coverage, and
+contained blast radius make rapid iteration possible.
+
+### Architectural Invariants
+
+These are enforced by structure today and by automated checks when the codebase
+grows:
+- No circular dependencies between packages
+- Core packages never import from `internal/`
+- No Monarch domain concepts (province, steward, protocol) in core packages
+- Dependency direction: `cmd/ → internal/monarch/ → core → stdlib/wrappers`
+
+---
+
 ## Next Steps
 
 1. Design the interfaces/API surface for each core package
