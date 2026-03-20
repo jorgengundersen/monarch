@@ -1,9 +1,5 @@
 # Agent Instructions
 
-- Use Conventional commits.
-- Do red/green TDD for code. One test than one implementation at a time
-- We use Beads, `bd`, for issues -- not GitHub Issues
-
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Quick Reference
@@ -150,3 +146,10 @@ For more details, see README.md and docs/QUICKSTART.md.
 - If push fails, resolve and retry until it succeeds
 
 <!-- END BEADS INTEGRATION -->
+
+- Use Conventional commits.
+- Do red/green TDD for code. One test than one implementation at a time
+- We use Beads, `bd`, for issues -- not GitHub Issues
+- While this project is inspired by GasTown, and we might look at how GasTown has
+  solved common problems, we should not directly implement anything from GasTown.
+  We will create implementations that solve our needs, and that fits our model.
