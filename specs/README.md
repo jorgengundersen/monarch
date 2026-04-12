@@ -20,4 +20,5 @@
 
 | File | Status | Description |
 |---|---|---|
+| [mvp-prd.md](mvp-prd.md) | Draft | First shippable Monarch loop: province, steward, single worker, review handoff |
 | [open-questions.md](open-questions.md) | Open | Foundational decisions: form factor, data model, agent integration, interaction design, protocols, scope |
