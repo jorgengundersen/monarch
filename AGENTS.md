@@ -150,6 +150,8 @@ For more details, see README.md and docs/QUICKSTART.md.
 - Use Conventional commits.
 - Do red/green TDD for code. One test than one implementation at a time
 - We use Beads, `bd`, for issues -- not GitHub Issues
+- `docs/` is for documentation and guides only.
+- PRDs and specs live in `specs/`; use `*-prd.md` for PRDs.
 - While this project is inspired by GasTown, and we might look at how GasTown has
   solved common problems, we should not directly implement anything from GasTown.
   We will create implementations that solve our needs, and that fits our model.
