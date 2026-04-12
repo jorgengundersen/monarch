@@ -305,7 +305,7 @@ realization of a role.
   working on?" instead of "what is agent a7f3b2 working on?"
 - State (idle, running, crashed, suspended)
 - Spawn location — where this agent is running (which machine, directory,
-  worktree, container, tmux session)
+  worktree, tmux session)
 - Current record (linked to record store — what they're working on)
 - Metadata — extensible key-value pairs for consumer-specific needs
 
@@ -434,7 +434,7 @@ Monarch is one opinionated consumer of these core systems. It adds:
 | Checkpoint | An event handler that creates a `message` (type review) and pauses |
 | Endeavour | A record subtree (typically rooted at a feature or task) |
 | Royal Decree | A `message` record with broadcast addressing |
-| `rex` CLI | A CLI that wires everything together with Monarch's opinions |
+| `rex` CLI | Governance operations CLI — not a universal wrapper, focused on governing work |
 
 None of these concepts exist in the core. They are all built by composing core
 primitives with Monarch-specific configuration.

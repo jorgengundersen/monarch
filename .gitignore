@@ -27,6 +27,8 @@ go.work.sum
 
 # env file
 .env
+prompt.md
+.beads/.beads-credential-key
 
 # Editor/IDE
 # .idea/

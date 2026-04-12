@@ -15,7 +15,7 @@ Monarch-specific internals.
 **Rationale:**
 - Native Dolt SDK for direct database integration
 - Strong CLI ecosystem (cobra, bubbletea)
-- Single binary compilation — ideal for container deployment
+- Single binary compilation — easy to deploy in any environment
 - Good concurrency model for orchestrator and daemon behavior
 - Clean module system aligns with "importable by anyone" design principle
 - `gofmt` eliminates formatting debates — one less thing for agents to get wrong

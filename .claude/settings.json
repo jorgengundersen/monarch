@@ -1,3 +1,14 @@
 {
-  "respectGitignore": false
+  "respectGitignore": false,
+  "extraKnownMarketplaces": {
+    "steveyegge-beads": {
+      "source": {
+        "source": "github",
+        "repo": "steveyegge/beads"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "beads@steveyegge-beads": true
+  }
 }

@@ -24,16 +24,25 @@ it constrains everything else.
     to be prepare for form factor changes in the future. But i believe that if create solid base,
     we can achieve that.
 
-    We definitly need to be able to control this with a command line tool. And while i like to stay on
-    the command line, there might be more benefitial to have at least some obervability via a
-    gui or web interface.
+    We definitly need to be able to control this with a command line tool.
+
+    **Decision (2026-04-11): `rex` is a governance CLI. Server/web/dashboard is a separate concern.**
+
+    `rex` is the CLI for governance operations: create provinces, assign work, configure
+    protocols, check status, issue decrees. It is NOT a universal wrapper for every tool
+    interaction. If the user wants to run a raw dolt query or interact with tmux directly,
+    they can. Rex is the governance interface, not the only interface.
+
+    Any server, web interface, dashboard, or API is a separate project that consumes
+    Monarch's structured output (Dolt database, JSON, structured logs) — not part of the
+    core product or `rex`. This keeps the core focused and allows faster iteration on the
+    governance systems, which is where the real learning and pivoting will happen.
 
     Most of state will be handled by beads (more on that later). Beads will allow us to give
     agents persistant memory in form of identity, past/current/future work, messages (potentially).
-    This might be sufficient to sync state across multiple interfaces (cli, web, dashbaord, who knows),
-    but we should have the option for a server/client model open for evaluation.
-    We will have some daemon behavior, that will listen to specific events (file changes, issues, issue status, request, messages, who knows?),
-    and will either redirect, inform/report, activate a specific agent or workflow, etc.
+    We will have some daemon behavior, that will listen to specific events (file changes, issues,
+    issue status, request, messages, who knows?), and will either redirect, inform/report,
+    activate a specific agent or workflow, etc.
 
     beads is backed by Dolt database. Since a dolt server is already a requirement
     for using beads, then we might as well utilize dolt if we need to.
@@ -43,42 +52,53 @@ it constrains everything else.
 </Answer>
 
 **Q1.2** Where does Monarch run?
-- [ ] Local machine only
+- [x] Local machine only
 - [ ] Local with optional remote sync
 - [x] Server/cloud-hosted
-- [ ] Doesn't matter yet
+- [x] Doesn't matter yet
 
 <Answer>
 
-    we need to have some degree of flexibility, but there are two likely scenarios:
-        1.
-            - docker based. each province has its own container with its own dependencies for the project
-            - maybe a monarch or council container for toplevel processing
-            - maybe dolt server in a seperate container
-            - linked via a docker network? I'm not 100% sure how this can be done
-        2.
-            - remote dedicated server (but that would also most likely utilize containers)
+    **Decision (2026-04-11): Monarch is environment-agnostic.**
 
-        3.
-            - small kubernetes like minikube, etc.?
+    Monarch has no opinions on the environment it runs in. The user decides
+    whether to run it on bare metal, in containers, on a VPS, in the cloud, etc.
+    Monarch declares its external dependencies (Dolt, tmux, Go, agent harnesses)
+    and expects the user to provide them — however they choose to.
 
-    we shold have an option to run it bare bone on host for some edge cases and controlled environment,
-    but that should be very intentional and something you need to set explicitly in the config.
+    Container orchestration was considered (Docker per province, Kubernetes, etc.)
+    but rejected because:
+    1. It conflates governance (Monarch's job) with infrastructure (not Monarch's job)
+    2. It narrows the user base for no gain — container, bare metal, Nix, VPS users
+       should all be able to use Monarch
+    3. It creates a maintenance burden that competes with the actual product
+       (the five core systems and governance layer)
 
-    I want have the a host installed command line tool that is used to control the monarchy,
-    but any agents should run in a container. This tool should be used for any interaction needed within the monarchy system.
-    Example: instead of relying of using beads command, or docker commands directly,
-            the cli tool should facility these processes.
+    Monarch's external dependencies:
+    - Dolt (database)
+    - tmux (agent session management and observability)
+    - Agent harnesses (Claude Code, OpenCode, Codex, etc.)
+    - Go runtime (for building/running Monarch itself)
+
+    The user is responsible for providing these dependencies in their environment.
+    Example deployment configurations (Docker Compose, Nix flake, shell scripts)
+    may be provided as non-authoritative references, but are not part of the core product.
+
+    I want to utilize tmux. each agent is run in its own tmux session. i want the
+    agent harness to be ran in tui mode, so that i can both observe and interact
+    with any agent. we can also utilize tmux functionality like easy session
+    switching, send-keys command, set environment variables per tmux session etc.
+
+    I want have a host installed command line tool (`rex`) that is used to control
+    the monarchy. This tool should be used for any interaction needed within the
+    monarchy system. Example: instead of relying on using beads commands directly,
+    the cli tool should facilitate these processes.
 
     this is important for two reasons;
-        1. its a way to make sure that the governing system is working correctly, like using the correct label, name space, that everything is flowing correctly
-        2. if we find other tools that suits us better, we want to be able to be able to swap external dependencies without breaking the whole system.
-
-
-    I want to utilize tmux. one container per province, but each agent is run in its own
-    tmux session. i want the agent harness to be ran in tui mode, so that i can
-    both observe and interact with any agent. we can also utilize tmux functionality
-    like easy session switching, send-keys command, set environment variables pr tmux session etc.
+        1. its a way to make sure that the governing system is working correctly,
+           like using the correct label, name space, that everything is flowing correctly
+        2. if we find other tools that suits us better, we want to be able to swap
+           external dependencies without breaking the whole system.
 
 </Answer>
 
@@ -104,8 +124,10 @@ the Hand as a Claude session, stewards as separate sessions)?
 <Answer>
 
     both human, daemon event triggers and agents will all interact with
-    the monarchy. probably via CLI tool.
-    If we see benefitial, we might move functionality to API, webapp, MCP, GUI?
+    the monarchy via `rex` CLI for governance operations.
+
+    Server, API, webapp, MCP, GUI are all separate projects that can be built on top of
+    Monarch's data (Dolt) and structured output — they are not part of `rex` or the core.
 
     the human will be able to move down the the layers as need, example; via tmux agent sessions.
 
@@ -177,10 +199,11 @@ A config file? A database?
 </Answer>
 
 **Q2.3** What does a province map to concretely? A git repo? A directory?
-A worktree? A container?
+A worktree?
 
 <Answer>
-    see answer above
+    see answer above. Note: a province is NOT tied to a container or any specific
+    infrastructure. It is a directory-based project area with git worktrees.
 </Answer>
 
 **Q2.4** What is the lifecycle of an endeavour? Sketch the state machine:
@@ -454,7 +477,9 @@ still have something worth using?
     The smallest, useful version of monarch is that we can create a province,
     create a steward agent for that province, have the basic issue/task tracking setup with beads,
     be able to delegate work to ephemeral workers, and that i can access any agent via tmux sessions.
-    Another important requirement is that any processes runs in docker container (one per province, one for dolt server and one for any toplevel processing)
+
+    Monarch is environment-agnostic — external dependencies (Dolt, tmux, agent harnesses)
+    must be present, but the user decides how to provide them (bare metal, containers, Nix, etc.).
 
     we should be able to setup simple workflows. the monarch (the human) will review before merging.
 
